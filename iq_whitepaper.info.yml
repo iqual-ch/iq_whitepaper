@@ -1,0 +1,7 @@
+name: iQual Whitepaper module
+description: Module that offers whitepapers to download and manage
+package: Custom
+type: module
+core: 8.x
+dependencies:
+  - drupal:iq_group

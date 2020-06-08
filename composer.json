@@ -1,0 +1,14 @@
+{
+  "name": "iqual/iq_whitepaper",
+  "description": "Iqual Whitepaper",
+  "type": "drupal-custom-module",
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://github.com/iqual-ch/iq_whitepaper"
+    }
+  ],
+  "require": {
+    "iqual/iq_group": "*"
+  }
+}

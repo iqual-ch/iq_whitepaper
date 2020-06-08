@@ -1,0 +1,9 @@
+langcode: de
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: iXGQf0BmAhacwAroyE9tNn50D5n-ZNh1GPxsLxY4_HQ
+name: Branches
+vid: branches
+description: ''
+weight: 0
