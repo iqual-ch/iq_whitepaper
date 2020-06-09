@@ -35,7 +35,7 @@ function iq_whitepaper_file_download($uri) {
       $user->set('field_iq_group_downloads', $downloads);
       $user->save();
       $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(IqGroupEvents::USER_DOWNLOAD_WHITEPAPER, new IqGroupEvent($user));
+      $eventDispatcher->dispatch(\Drupal\iq_whitepaper\IqWhitepaperEvents::USER_DOWNLOAD_WHITEPAPER, new \Drupal\iq_whitepaper\Event\IqWhitepaperEvent($user));
     }
   }
 }
