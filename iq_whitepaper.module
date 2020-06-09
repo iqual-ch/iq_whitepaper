@@ -24,7 +24,7 @@ function iq_whitepaper_file_download($uri) {
     $whitepaper = reset($whitepaper);
     if (isset($whitepaper) && $whitepaper->id() > 0)
     {
-      $user = \Drupal::currentUser()->getAccount();
+      $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
       $existing_downloads = $user->get('field_iq_group_downloads')
         ->getValue();
       $downloads = [];
@@ -243,7 +243,6 @@ function iq_whitepaper_theme($existing, $type, $theme, $path) {
  */
 function iq_whitepaper_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
 
-  $user = \Drupal::currentUser()->getAccount();
   if ($entity->bundle() == 'iq_group_whitepaper') {
     $user_edit = \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\UserEditForm');
     $build['user_wrapper'] = [
@@ -262,7 +261,7 @@ function iq_whitepaper_entity_view_alter(array &$build, Drupal\Core\Entity\Entit
  */
 function iq_whitepaper_file_access(FileInterface $file, $operation, AccountInterface $account) {
   // Block access to private file uploads for anonymous users.
-  $user = \Drupal::currentUser()->getAccount();
+  $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
   $whitepaper = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
     'type' => 'iq_group_whitepaper',
     'field_iq_group_whitepaper_file' => $file->id(),
