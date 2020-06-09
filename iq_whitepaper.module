@@ -1,7 +1,10 @@
 <?php
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\file\FileInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
 use Drupal\node\Entity\Node;
@@ -188,16 +191,16 @@ function _node_field_group_edit_custom_callback_group($form, FormStateInterface 
  */
 function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
   if ($view->id() == 'whitepaper_block') {
-    $registerForm = \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\RegisterForm');
+    $whitepaperForm = \Drupal::formBuilder()->getForm('Drupal\iq_whitepaper\Form\WhitepaperForm');
     // If there is a resource selected (currently whitepaper, later it may vary).
     if (\Drupal::currentUser()->isAnonymous()) {
       if ($view->filter['nid']->value['value'] != NULL) {
-        unset($registerForm['preferences']);
+        unset($whitepaperForm['preferences']);
         $nid = $view->filter['nid']->value['value'];
         if (is_array($nid)) {
           $nid = reset($nid);
         }
-        $registerForm['destination']['#value'] = '/node/' . $nid;
+        $whitepaperForm['destination']['#value'] = '/node/' . $nid;
         $destination = '/node/' . $nid;
         \Drupal::logger('iq_group')->notice(json_encode($view->filter['nid']->value['value']));
       }
@@ -205,17 +208,17 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
       if (!isset($destination)) {
         $destination = \Drupal::service('path.current')->getPath();
       }
-      $registerForm['register_link'] = [
+      $whitepaperForm['register_link'] = [
         '#type' => 'markup',
         '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Register') . '</a> / ',
         '#weight' => 100
       ];
-      $registerForm['login_link'] = [
+      $whitepaperForm['login_link'] = [
         '#type' => 'markup',
         '#markup' => '<a href="/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
         '#weight' => 100
       ];
-      $view->attachment_after = $registerForm;
+      $view->attachment_after = $whitepaperForm;
     }
   }
 }
@@ -251,6 +254,30 @@ function iq_whitepaper_entity_view_alter(array &$build, Drupal\Core\Entity\Entit
     $build['user_wrapper']['user_block'] = $user_edit;
     $build['user_wrapper']['#weight'] = 150000;
   }
+}
 
 
+/**
+ * Implements hook_file_access().
+ */
+function iq_whitepaper_file_access(FileInterface $file, $operation, AccountInterface $account) {
+  // Block access to private file uploads for anonymous users.
+  $user = \Drupal::currentUser()->getAccount();
+  $whitepaper = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'iq_group_whitepaper',
+    'field_iq_group_whitepaper_file' => $file->id(),
+  ]);
+  if (\Drupal::currentUser()->isAnonymous() && !empty($whitepaper)) {
+    return AccessResult::forbidden();
+  }
+  else {
+    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+    $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+    $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+    $groupRoles = array_keys($groupRoles);
+    if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
+      return AccessResult::allowed();
+    }
+  }
+  return AccessResult::neutral();
 }

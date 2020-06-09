@@ -1,0 +1,39 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - advanced_menu_condition
+    - iq_group
+    - pagedesigner_block
+    - iq_whitepaper
+  theme:
+    - iq_custom
+id: whitepaperblock_2
+theme: iq_custom
+region: pagedesigner
+weight: 0
+provider: null
+plugin: whitepaper_block
+settings:
+  id: whitepaper_block
+  label: 'Whitepaper block'
+  provider: iq_whitepaper
+  label_display: visible
+visibility:
+  advanced_menu_position:
+    id: advanced_menu_position
+    menu_position:
+      '': ''
+    negate: null
+    context_mapping: {  }
+  advanced_menu_position_not:
+    id: advanced_menu_position_not
+    not_menu_position:
+      '': ''
+    negate: null
+    context_mapping: {  }
+  pagedesigner_condition:
+    id: pagedesigner_condition
+    pagedesigner_condition: 0
+    negate: null
+    context_mapping: {  }
