@@ -244,14 +244,22 @@ function iq_whitepaper_theme($existing, $type, $theme, $path) {
 function iq_whitepaper_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
 
   if ($entity->bundle() == 'iq_group_whitepaper') {
+    $build['edit_profile'] = [
+      '#type' => 'markup',
+      '#markup' => '</br><div class="iqbm-button iqbm-text btn btn-cta"><a href="/user/edit">' . t('Edit profile') . '</a></div>',
+      '#weight' => 150000,
+    ];
+    // The user edit form, now removed due to adjustment.
+    /*
     $user_edit = \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\UserEditForm');
+    unset($user_edit['full_profile_edit']);
     $build['user_wrapper'] = [
       '#type' => 'fieldset',
       '#title' => t('User settings'),
       '#prefix' => '<br/><br/>',
     ];
     $build['user_wrapper']['user_block'] = $user_edit;
-    $build['user_wrapper']['#weight'] = 150000;
+    $build['user_wrapper']['#weight'] = 150000;*/
   }
 }
 
