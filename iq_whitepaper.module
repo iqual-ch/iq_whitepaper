@@ -280,3 +280,72 @@ function iq_whitepaper_file_access(FileInterface $file, $operation, AccountInter
   }
   return AccessResult::neutral();
 }
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
+  // show him the link to the resource
+  $result = \Drupal::entityTypeManager()
+    ->getStorage('group')
+    ->loadMultiple();
+  $options = [];
+  /**
+   * @var  int $key
+   * @var  \Drupal\group\Entity\Group $group
+   */
+  foreach ($result as $key => $group) {
+    if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id'))
+      $options[$group->id()] = $group->label();
+  }
+
+  if ($user->hasField('field_iq_group_preferences') && !isset($form['preferences'])) {
+    $selected_preferences = $user->get('field_iq_group_preferences')
+      ->getValue();
+    $default_value = [];
+    foreach ($selected_preferences as $key => $value) {
+      if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
+        $default_value = array_merge($default_value, [$value['target_id']]);
+    }
+
+    /** @var Node $node */
+    $node = \Drupal::routeMatch()->getParameter('node');
+    if (!empty($node) && $node->bundle() == 'iq_group_whitepaper') {
+      $form['preferences'] = [
+        '#type' => 'checkboxes',
+        '#options' => $options,
+        '#multiple' => TRUE,
+        '#default_value' => $default_value,
+        '#title' => t('Preferences'),
+        '#weight' => 20,
+      ];
+    }
+  }
+
+  if ($user->hasField('field_iq_group_branches') && !isset($form['branches'])) {
+    $vid = 'branches';
+    $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+    $term_options = [];
+    foreach ($terms as $term) {
+      $term_options[$term->tid] = $term->name;
+    }
+    $selected_branches = $user->get('field_iq_group_branches')
+      ->getValue();
+    $default_branches = [];
+    foreach ($selected_branches as $key => $value) {
+      if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
+        $default_branches = array_merge($default_branches, [$value['target_id']]);
+    }
+    if (!empty($node) && $node->bundle() == 'iq_group_whitepaper') {
+      $form['branches'] = [
+        '#type' => 'checkboxes',
+        '#options' => $term_options,
+        '#default_value' => $default_branches,
+        '#multiple' => TRUE,
+        '#title' => t('Branches'),
+        '#weight' => 30,
+      ];
+    }
+  }
+}
