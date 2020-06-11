@@ -146,13 +146,13 @@ class WhitepaperForm extends FormBase
         }
         $renderable = [
           '#theme' => 'whitepaper_template',
-          '#EMAIL_TITLE' => 'Whitepaper Download',
-          '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
+          '#EMAIL_TITLE' => $this->t('Whitepaper download'),
+          '#EMAIL_PREVIEW_TEXT' => $this->t("Download your @project_name whitepaper now", ['@project_name' => $project_name]),
           '#EMAIL_URL' => $url,
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-        $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
+        $result = mail($user->getEmail(), $this->t("Whitepaper download"), $rendered,
           "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
