@@ -210,7 +210,7 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
       }
       $whitepaperForm['register_link'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Register') . '</a> / ',
+        '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Create an account') . '</a> / ',
         '#weight' => 100
       ];
       $whitepaperForm['login_link'] = [
