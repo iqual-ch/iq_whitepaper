@@ -125,15 +125,7 @@ class WhitepaperForm extends FormBase
       // If the user exists, send him an email to login.
       if (count($result) > 0) {
         $user = \Drupal\user\Entity\User::load(reset($result));
-        if ($user->field_iq_group_user_token->value == NULL) {
-          $data = time();
-          $data .= $user->id();
-          $data .= $user->getEmail();
-          $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
-          $user->set('field_iq_group_user_token', $hash_token);
-          $user->save();
-        }
-        $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+
         if ($form_state->getValue('destination') != "")  {
           $destination = $form_state->getValue('destination');
         }
@@ -141,45 +133,30 @@ class WhitepaperForm extends FormBase
           // @todo Set a destination if it is a signup form or not?
           //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
         }
-        if (isset($destination) && $destination != NULL) {
-          $url .= "?destination=" . $destination;
-        }
         $renderable = [
           '#theme' => 'whitepaper_template',
           '#EMAIL_TITLE' => $this->t('Whitepaper download'),
           '#EMAIL_PREVIEW_TEXT' => $this->t("Download your @project_name whitepaper now", ['@project_name' => $project_name]),
-          '#EMAIL_URL' => $url,
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
-        $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-        $result = mail($user->getEmail(), $this->t("Whitepaper download"), $rendered,
-          "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+        UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
       }
       // If the user does not exist
       else {
-
         if ($form_state->getValue('name') != NULL) {
           $name = $form_state->getValue('name');
         }
         else {
           $name = $form_state->getValue('mail');
         }
-        $user = \Drupal\user\Entity\User::create([
+        $user_data = [
           'mail' => $form_state->getValue('mail'),
           'name' => $name,
           'status' => 1,
-        ]);
-        $user->save();
-        $data = time();
-        $data .= $user->id();
-        $data .= $user->getEmail();
-        $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
-        $user->set('field_iq_group_user_token', $hash_token);
+        ];
         if ($form_state->getValue('preferences') != NULL) {
-          $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
+          $user_data['field_iq_group_preferences'] = $form_state->getValue('preferences');
         }
-        $user->save();
-        $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
         if ($form_state->getValue('destination') != "")  {
           $destination = $form_state->getValue('destination');
         }
@@ -187,19 +164,13 @@ class WhitepaperForm extends FormBase
           // @todo Set a destination if it is a signup form or not?
           //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
         }
-        if (isset($destination) && $destination != NULL) {
-          $url .= "?destination=" . $destination;
-        }
         $renderable = [
           '#theme' => 'whitepaper_template',
           '#EMAIL_TITLE' => 'Whitepaper Download',
           '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
-          '#EMAIL_URL' => $url,
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
-        $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-        $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
-          "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+        UserController::createMember($user_data, $renderable, $destination);
       }
       \Drupal::messenger()->addMessage($this->t('We have sent you an email.'));
     }
