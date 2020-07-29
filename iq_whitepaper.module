@@ -34,6 +34,23 @@ function iq_whitepaper_file_download($uri) {
             $downloads[] = $val['target_id'];
         }
       }
+
+      // Add the branches from the whitepaper to the user's.
+      $default_branches = [];
+
+      // User branches.
+      $selected_branches = $user->get('field_iq_group_branches')->getValue();
+      foreach ($selected_branches as $key => $value) {
+          $default_branches = array_merge($default_branches, [$value['target_id']]);
+      }
+      // Whitepaper branches.
+      $whitepaper_branches = $whitepaper->get('field_iq_group_branches')->getValue();
+      foreach ($whitepaper_branches as $key => $value) {
+        $default_branches = array_merge($default_branches, [$value['target_id']]);
+      }
+
+      $user->set('field_iq_group_branches', $default_branches);
+
       $downloads[] = $whitepaper->id();
       $user->set('field_iq_group_downloads', $downloads);
       $user->save();
@@ -342,7 +359,6 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\F
       ->getValue();
     $default_branches = [];
     foreach ($selected_branches as $key => $value) {
-      if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
         $default_branches = array_merge($default_branches, [$value['target_id']]);
     }
     if (!empty($node) && $node->bundle() == 'iq_group_whitepaper') {
