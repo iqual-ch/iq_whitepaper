@@ -1,16 +1,16 @@
-uuid: e65c1d43-be5e-4ca6-888d-d469dd4b1425
+uuid: a6ef9c67-353d-45f5-a7af-d097931b1d52
 langcode: de
 status: true
 dependencies:
   config:
-    - field.storage.node.field_iq_group_branches
+    - field.storage.node.field_iq_group_products
     - node.type.iq_group_whitepaper
-    - taxonomy.vocabulary.branches
-id: node.iq_group_whitepaper.field_iq_group_branches
-field_name: field_iq_group_branches
+    - taxonomy.vocabulary.iq_group_products
+id: node.iq_group_whitepaper.field_iq_group_products
+field_name: field_iq_group_products
 entity_type: node
 bundle: iq_group_whitepaper
-label: Branches
+label: Products
 description: ''
 required: false
 translatable: false
@@ -20,7 +20,7 @@ settings:
   handler: 'default:taxonomy_term'
   handler_settings:
     target_bundles:
-      branches: branches
+      iq_group_products: iq_group_products
     sort:
       field: name
       direction: asc

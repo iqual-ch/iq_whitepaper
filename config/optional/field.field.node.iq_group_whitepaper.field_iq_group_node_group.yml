@@ -1,4 +1,5 @@
-langcode: en
+uuid: c75ccd8c-0c33-41d2-b2a7-55f1829ecf17
+langcode: de
 status: true
 dependencies:
   config:
@@ -6,7 +7,7 @@ dependencies:
     - group.type.subscription
     - node.type.iq_group_whitepaper
   content:
-    - 'group:subscription:841d8781-0afd-46c4-b33a-f2966fc4aec4'
+    - 'group:subscription:ab5279e6-5071-4fa7-8c42-a12ce5d836a1'
 id: node.iq_group_whitepaper.field_iq_group_node_group
 field_name: field_iq_group_node_group
 entity_type: node
@@ -17,7 +18,7 @@ required: false
 translatable: false
 default_value:
   -
-    target_uuid: 841d8781-0afd-46c4-b33a-f2966fc4aec4
+    target_uuid: ab5279e6-5071-4fa7-8c42-a12ce5d836a1
 default_value_callback: ''
 settings:
   handler: 'default:group'
