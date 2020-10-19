@@ -1,28 +1,29 @@
-uuid: 46027cf2-0321-4b94-96fb-6adf64b0ceb0
+uuid: 348a06c3-4653-425c-bbf9-1020126f70bd
 langcode: de
 status: true
 dependencies:
   config:
-    - views.view.whitepaper_block
+    - views.view.whitepapers_by_branch
   module:
     - advanced_menu_condition
     - pagedesigner_block
-    - pagedesigner_block_adaptable
+    - views
   theme:
     - iq_custom
-id: views_block__whitepaper_block_adaptable_block_1
+id: views_block__whitepapers_by_branch_block_1
 theme: iq_custom
 region: pagedesigner
 weight: 0
 provider: null
-plugin: 'adaptable_views_block:whitepaper_block-adaptable_block_1'
+plugin: 'views_block:whitepapers_by_branch-block_1'
 settings:
-  id: 'adaptable_views_block:whitepaper_block-adaptable_block_1'
+  id: 'views_block:whitepapers_by_branch-block_1'
   label: ''
-  provider: pagedesigner_block_adaptable
-  label_display: visible
+  provider: views
+  label_display: '0'
   views_label: ''
   items_per_page: none
+  context_mapping: {  }
 visibility:
   advanced_menu_position:
     id: advanced_menu_position

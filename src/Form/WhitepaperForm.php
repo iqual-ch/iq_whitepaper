@@ -40,7 +40,7 @@ class WhitepaperForm extends FormBase
         '#type' => 'hidden',
         '#title' => $this->t('Username'),
         '#maxlength' => USERNAME_MAX_LENGTH,
-        '#description' => $this->t("Several special characters are allowed, including space, period (.), hyphen (-), apostrophe ('), underscore (_), and the @ sign."),
+        '#description' => $this->t("Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."),
         '#required' => FALSE,
         '#attributes' => [
           'class' => ['username'],
@@ -172,7 +172,7 @@ class WhitepaperForm extends FormBase
         ];
         UserController::createMember($user_data, $renderable, $destination);
       }
-      \Drupal::messenger()->addMessage($this->t('We have sent you an email.'));
+      \Drupal::messenger()->addMessage($this->t('Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper.'));
     }
     else {
       $user = User::load(\Drupal::currentUser()->id());

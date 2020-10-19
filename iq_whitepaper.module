@@ -51,6 +51,20 @@ function iq_whitepaper_file_download($uri) {
 
       $user->set('field_iq_group_branches', $default_branches);
 
+      // User products.
+      $default_products = [];
+      $selected_products = $user->get('field_iq_group_products')->getValue();
+      foreach ($selected_products as $key => $value) {
+        $default_products = array_merge($default_products, [$value['target_id']]);
+      }
+
+      // Whitepaper products.
+      $whitepaper_products = $whitepaper->get('field_iq_group_products')->getValue();
+      foreach ($whitepaper_products as $key => $value) {
+        $default_products = array_merge($default_products, [$value['target_id']]);
+      }
+      $user->set('field_iq_group_products', $default_products);
+
       $downloads[] = $whitepaper->id();
       $user->set('field_iq_group_downloads', $downloads);
       $user->save();
