@@ -7,9 +7,9 @@ dependencies:
     - pagedesigner_block
     - iq_whitepaper
   theme:
-    - iq_custom
+    - custom_theme
 id: whitepaperblock_2
-theme: iq_custom
+theme: custom_theme
 region: pagedesigner
 weight: 0
 provider: null

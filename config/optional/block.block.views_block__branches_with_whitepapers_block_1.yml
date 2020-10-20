@@ -10,9 +10,9 @@ dependencies:
     - system
     - views
   theme:
-    - iq_custom
+    - custom_theme
 id: views_block__branches_with_whitepapers_block_1
-theme: iq_custom
+theme: custom_theme
 region: content_below
 weight: -49
 provider: null
