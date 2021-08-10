@@ -8,6 +8,7 @@ use Drupal\file\FileInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
 use Drupal\node\Entity\Node;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implements hook_file_download().
@@ -251,6 +252,82 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
       ];
       $view->attachment_after = $whitepaperForm;
     }
+    else {
+      $node = $view->result[0]->_entity;
+
+      if (!empty($node)) {
+        $plugin_id = 'group_node:' . $node->bundle();
+
+        // Load all of the group content for this node.
+        $group_contents = \Drupal::entityTypeManager()
+          ->getStorage('group_content')
+          ->loadByEntity($node);
+
+
+        /** @var \Drupal\group\Entity\GroupInterface[] $groups */
+        $groups = [];
+        foreach ($group_contents as $group_content) {
+          /** @var \Drupal\group\Entity\GroupContentInterface $group_content */
+          $group = $group_content->getGroup();
+          $groups[$group->id()] = $group;
+        }
+        $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        $accessible = FALSE;
+        foreach ($groups as $group) {
+          if ($node->isPublished()) {
+            if ($group->hasPermission("view $plugin_id entity", $account)) {
+              $accessible = TRUE;
+            }
+          }
+          elseif ($group->hasPermission("view unpublished $plugin_id entity", $account)) {
+            $accessible = TRUE;
+          }
+        }
+        if (!$accessible) {
+          unset($view->result[0]->_entity);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode)
+{
+  if ($entity->bundle() == 'iq_group_whitepaper') {
+
+    $file = $entity->field_iq_group_whitepaper_file->entity;
+    if (!empty($file)) {
+      \Drupal::logger('iq_group')->notice('Tuka sme' . $file->getFileUri());
+      $content = file_get_contents($file->getFileUri());
+      $file_size = strlen($content);
+      header('Content-Description: File Transfer');
+      header('Content-Type: ' . $file->getMimeType()); //Im assuming it is audio file you can have your own logic to assign content type dynamically for your file types
+      header('Content-Disposition: attachment; filename="' . $file->getFilename() . '"'); //Im assuming it is audio mp3 file you can have your own logic to  assign file extension dynamically for your files
+      header('Expires: 0');
+      header('Cache-Control: must-revalidate');
+      header('Pragma: public');
+      header('Content-Length: ' . $file_size);
+      header('Set-Cookie: fileLoading=true');
+      flush();
+      echo($content);
+      \Drupal\Core\Cache\Cache::invalidateTags(['node:' . $entity->id()]);
+      \Drupal::entityTypeManager()->getStorage('node')->resetCache([$entity->id()]);
+      $response = new RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')
+        ->toString());
+      $response->send();
+
+      return $response;
+
+    }
+    \Drupal\Core\Cache\Cache::invalidateTags(['node:' . $entity->id()]);
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache([$entity->id()]);
+    $response = new RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')
+      ->toString());
+    $response->send();
+    return $response;
   }
 }
 
