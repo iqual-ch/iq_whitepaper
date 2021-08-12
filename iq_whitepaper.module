@@ -460,7 +460,7 @@ function iq_whitepaper_page_attachments(array &$attachments)
     $is_front_page = \Drupal::service('path.matcher')->isFrontPage();
     if (!empty($tempStore->get($user->id() . '_whitepaper_file_path')) && $is_front_page) {
       \Drupal::messenger()->deleteAll();
-      \Drupal::messenger()->addMessage('Your whitepaper will be now downloaded. You can find it in your Downloads folder.');
+      \Drupal::messenger()->addMessage(t('Your whitepaper will be now downloaded. You can find it in your Downloads folder.'));
       $whitepaper_file_path = $tempStore->get($user->id() . '_whitepaper_file_path');
       $attachments['#attached']['library'][] = 'iq_whitepaper/file_download';
       $attachments['#attached']['drupalSettings']['whitepaper_file_path'] = $whitepaper_file_path;
