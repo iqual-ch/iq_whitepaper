@@ -296,38 +296,21 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
  */
 function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode)
 {
-  if ($entity->bundle() == 'iq_group_whitepaper') {
-
+  if ($entity->getType() == 'iq_group_whitepaper' && $view_mode == 'full') {
+    $build['#cache']['max-age'] = 0;
+    $tempStore = \Drupal::service('user.shared_tempstore')->get('iq_whitepaper.file_download');
     $file = $entity->field_iq_group_whitepaper_file->entity;
     if (!empty($file)) {
-      \Drupal::logger('iq_group')->notice('Tuka sme' . $file->getFileUri());
-      $content = file_get_contents($file->getFileUri());
-      $file_size = strlen($content);
-      header('Content-Description: File Transfer');
-      header('Content-Type: ' . $file->getMimeType()); //Im assuming it is audio file you can have your own logic to assign content type dynamically for your file types
-      header('Content-Disposition: attachment; filename="' . $file->getFilename() . '"'); //Im assuming it is audio mp3 file you can have your own logic to  assign file extension dynamically for your files
-      header('Expires: 0');
-      header('Cache-Control: must-revalidate');
-      header('Pragma: public');
-      header('Content-Length: ' . $file_size);
-      header('Set-Cookie: fileLoading=true');
-      flush();
-      echo($content);
-      \Drupal\Core\Cache\Cache::invalidateTags(['node:' . $entity->id()]);
-      \Drupal::entityTypeManager()->getStorage('node')->resetCache([$entity->id()]);
-      $response = new RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')
-        ->toString());
-      $response->send();
 
-      return $response;
-
+      $drupal_file_uri = $file->getFileUri();
+      $file_path = file_url_transform_relative(file_create_url($drupal_file_uri));
     }
+    $tempStore->set(\Drupal::currentUser()->id() . '_whitepaper_file_path', $file_path);
     \Drupal\Core\Cache\Cache::invalidateTags(['node:' . $entity->id()]);
-    \Drupal::entityTypeManager()->getStorage('node')->resetCache([$entity->id()]);
+
     $response = new RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')
       ->toString());
     $response->send();
-    return $response;
   }
 }
 
@@ -461,6 +444,25 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\F
         '#title' => t('Branches'),
         '#weight' => 30,
       ];
+    }
+  }
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function iq_whitepaper_page_attachments(array &$attachments)
+{
+  $user = \Drupal::currentUser();
+  if (!$user->isAnonymous()) {
+    $tempStore = \Drupal::service('user.shared_tempstore')->get('iq_whitepaper.file_download');
+
+    $is_front_page = \Drupal::service('path.matcher')->isFrontPage();
+    if (!empty($tempStore->get($user->id() . '_whitepaper_file_path')) && $is_front_page) {
+      $whitepaper_file_path = $tempStore->get($user->id() . '_whitepaper_file_path');
+      $attachments['#attached']['library'][] = 'iq_whitepaper/file_download';
+      $attachments['#attached']['drupalSettings']['whitepaper_file_path'] = $whitepaper_file_path;
+      $tempStore->delete($user->id() . '_whitepaper_file_path');
     }
   }
 }

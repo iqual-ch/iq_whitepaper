@@ -1,0 +1,7 @@
+file_download:
+  version: VERSION
+  js:
+    resources/js/file_download.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal.ajax
