@@ -23,7 +23,7 @@ function iq_whitepaper_file_download($uri) {
       'field_iq_group_whitepaper_file' => $file->id(),
     ]);
     $whitepaper = reset($whitepaper);
-    if (isset($whitepaper) && $whitepaper->id() > 0)
+    if (!empty($whitepaper) && $whitepaper->id() > 0)
     {
       $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
       $existing_downloads = $user->get('field_iq_group_downloads')
