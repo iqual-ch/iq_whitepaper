@@ -19,6 +19,14 @@
       URL.revokeObjectURL(link.href), 60;
       link.parentNode.removeChild(link);
     }, 0);
+
+    // Push download event to datalayer for GTM tracking
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      "event": "whitepaper_download",
+      "whitepaper_url": url,
+      "whitepaper_filename": file_name,
+    });
   }
   $(document).ready(function (e) {
     var url = drupalSettings.whitepaper_file_path;
