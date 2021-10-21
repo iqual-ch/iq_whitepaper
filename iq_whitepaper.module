@@ -251,6 +251,8 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
         '#weight' => 100
       ];
       $view->attachment_after = $whitepaperForm;
+      // If the user is anonymous, he should not be able to look at the whitepapers.
+      unset($view->result);
     }
     else {
       $node = $view->result[0]->_entity;
