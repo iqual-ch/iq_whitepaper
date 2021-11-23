@@ -15,7 +15,7 @@
 
     // To make this work on Firefox we need to wait
     // a little while before removing it.
-    setTimeout(() => {
+    setTimeout(function() {
       URL.revokeObjectURL(link.href), 60;
       link.parentNode.removeChild(link);
     }, 0);
