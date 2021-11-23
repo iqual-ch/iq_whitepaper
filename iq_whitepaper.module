@@ -464,6 +464,7 @@ function iq_whitepaper_page_attachments(array &$attachments)
       \Drupal::messenger()->deleteAll();
       \Drupal::messenger()->addMessage(t('Your whitepaper will be now downloaded. You can find it in your Downloads folder.'));
       $whitepaper_file_path = $tempStore->get($user->id() . '_whitepaper_file_path');
+      \Drupal::messenger()->addMessage(t('If the download did not start automatically, click <a href="@link">here</a>.', ['@link' =>  $whitepaper_file_path]));
       $attachments['#attached']['library'][] = 'iq_whitepaper/file_download';
       $attachments['#attached']['drupalSettings']['whitepaper_file_path'] = $whitepaper_file_path;
       $tempStore->delete($user->id() . '_whitepaper_file_path');
