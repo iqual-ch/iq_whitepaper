@@ -150,3 +150,6 @@ msgstr "Bestätigen Sie die Registrierung Ihres Benutzerkontos"
 
 msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
 msgstr "Ich akzeptiere die <a href=\"@terms_and_conditions\" target=\"_blank\">SQS-Datenschutzbestimmungen</a>."
+
+msgid 'If the download did not start automatically, click <a href="@link">here</a>.'
+msgstr 'Wenn der Download nicht automatisch gestartet wurde, klicken Sie <a href="@link">hier</a>.'
