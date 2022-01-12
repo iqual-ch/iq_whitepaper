@@ -1,0 +1,5 @@
+services:
+  http_middleware.iq_whitepaper:
+    class: Drupal\iq_whitepaper\RedirectMiddleware
+    tags:
+      - { name: http_middleware}

@@ -300,6 +300,7 @@ function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterf
     $build['#cache']['max-age'] = 0;
     $tempStore = \Drupal::service('tempstore.shared')->get('iq_whitepaper.file_download');
     $file = $entity->field_iq_group_whitepaper_file->entity;
+    $middleware = \Drupal::service('http_middleware.iq_whitepaper');
     if (!empty($file)) {
 
       $drupal_file_uri = $file->getFileUri();
@@ -310,7 +311,7 @@ function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterf
 
     $response = new RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')
       ->toString());
-    $response->send();
+    $middleware->setRedirectResponse($response);
   }
 }
 
