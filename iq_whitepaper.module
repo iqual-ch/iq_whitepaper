@@ -298,7 +298,7 @@ function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterf
 {
   if ($entity->getType() == 'iq_group_whitepaper' && $view_mode == 'full') {
     $build['#cache']['max-age'] = 0;
-    $tempStore = \Drupal::service('user.shared_tempstore')->get('iq_whitepaper.file_download');
+    $tempStore = \Drupal::service('tempstore.shared')->get('iq_whitepaper.file_download');
     $file = $entity->field_iq_group_whitepaper_file->entity;
     if (!empty($file)) {
 
@@ -455,7 +455,7 @@ function iq_whitepaper_page_attachments(array &$attachments)
 {
   $user = \Drupal::currentUser();
   if (!$user->isAnonymous()) {
-    $tempStore = \Drupal::service('user.shared_tempstore')->get('iq_whitepaper.file_download');
+    $tempStore = \Drupal::service('tempstore.shared')->get('iq_whitepaper.file_download');
 
     $is_front_page = \Drupal::service('path.matcher')->isFrontPage();
     if (!empty($tempStore->get($user->id() . '_whitepaper_file_path')) && $is_front_page) {
