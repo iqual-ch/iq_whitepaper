@@ -1,5 +1,12 @@
 <?php
 
+use Drupal\iq_whitepaper\IqWhitepaperEvents;
+use Drupal\iq_whitepaper\Event\IqWhitepaperEvent;
+use Drupal\views\ViewExecutable;
+use Drupal\user\Entity\User;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Url;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -70,7 +77,7 @@ function iq_whitepaper_file_download($uri) {
       $user->set('field_iq_group_downloads', $downloads);
       $user->save();
       $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(\Drupal\iq_whitepaper\IqWhitepaperEvents::USER_DOWNLOAD_WHITEPAPER, new \Drupal\iq_whitepaper\Event\IqWhitepaperEvent($user));
+      $eventDispatcher->dispatch(IqWhitepaperEvents::USER_DOWNLOAD_WHITEPAPER, new IqWhitepaperEvent($user));
     }
   }
 }
@@ -100,7 +107,7 @@ function _node_field_group_settings() {
 /**
  * Implements hook_form_alter().
  */
-function iq_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_whitepaper_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $settings = _node_field_group_settings();
   // Add node.
   if (in_array($form_id, $settings['form_id_add'])) {
@@ -221,7 +228,7 @@ function _node_field_group_edit_custom_callback_group($form, FormStateInterface 
 /**
  * Implements hook_views_pre_render().
  */
-function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
+function iq_whitepaper_views_pre_render(ViewExecutable $view) {
   if ($view->id() == 'whitepaper_block') {
     $whitepaperForm = \Drupal::formBuilder()->getForm('Drupal\iq_whitepaper\Form\WhitepaperForm');
     // If there is a resource selected (currently whitepaper, later it may vary).
@@ -273,7 +280,7 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
           $group = $group_content->getGroup();
           $groups[$group->id()] = $group;
         }
-        $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        $account = User::load(\Drupal::currentUser()->id());
         $accessible = FALSE;
         foreach ($groups as $group) {
           if ($node->isPublished()) {
@@ -296,7 +303,7 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
 /**
  * Implements hook_ENTITY_TYPE_view().
  */
-function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode)
+function iq_whitepaper_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode)
 {
   if ($entity->getType() == 'iq_group_whitepaper' && $view_mode == 'full') {
     $build['#cache']['max-age'] = 0;
@@ -305,12 +312,12 @@ function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterf
     if (!empty($file)) {
 
       $drupal_file_uri = $file->getFileUri();
-      $file_path = file_url_transform_relative(file_create_url($drupal_file_uri));
+      $file_path = \Drupal::service('file_url_generator')->generateString($drupal_file_uri);
     }
     $tempStore->set(\Drupal::currentUser()->id() . '_whitepaper_file_path', $file_path);
-    \Drupal\Core\Cache\Cache::invalidateTags(['node:' . $entity->id()]);
+    Cache::invalidateTags(['node:' . $entity->id()]);
 
-    $response = new RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')
+    $response = new RedirectResponse(Url::fromRoute('<front>')
       ->toString());
     $response->send();
   }
@@ -334,7 +341,7 @@ function iq_whitepaper_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_entity_view_alter().
  */
-function iq_whitepaper_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+function iq_whitepaper_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
 
   if ($entity->bundle() == 'iq_group_whitepaper') {
     $build['edit_profile'] = [
@@ -385,7 +392,7 @@ function iq_whitepaper_file_access(FileInterface $file, $operation, AccountInter
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
   // show him the link to the resource
   $result = \Drupal::entityTypeManager()
