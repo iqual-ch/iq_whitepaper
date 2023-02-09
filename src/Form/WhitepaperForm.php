@@ -2,15 +2,17 @@
 
 namespace Drupal\iq_whitepaper\Form;
 
-use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
-use Drupal\Core\Site\Settings;
 use Drupal\group\Entity\Group;
 use Drupal\iq_group\Controller\UserController;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
-class WhitepaperForm extends FormBase
-{
+/**
+ *
+ */
+class WhitepaperForm extends FormBase {
 
   /**
    * {@inheritDoc}
@@ -22,7 +24,7 @@ class WhitepaperForm extends FormBase
   /**
    * {@inheritDoc}
    */
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $account = \Drupal::currentUser();
     $default_preferences = [];
     $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
@@ -39,7 +41,7 @@ class WhitepaperForm extends FormBase
       $form['name'] = [
         '#type' => 'hidden',
         '#title' => $this->t('Username'),
-        '#maxlength' => USERNAME_MAX_LENGTH,
+        '#maxlength' => UserInterface::USERNAME_MAX_LENGTH,
         '#description' => $this->t("Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."),
         '#required' => FALSE,
         '#attributes' => [
@@ -52,19 +54,21 @@ class WhitepaperForm extends FormBase
       $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";
       $form['data_privacy'] = [
         '#type' => 'checkbox',
-        '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),        '#default_value' => false,
+        '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
+        '#default_value' => FALSE,
         '#weight' => 100,
-        '#required' => true,
+        '#required' => TRUE,
       ];
     }
     else {
-      if(in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
+      if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
         $user = User::load($account->id());
         $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
         foreach ($selected_preferences as $key => $value) {
           // If it is not the general group, add it.
-          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
+          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
             $default_preferences = array_merge($default_preferences, [$value['target_id']]);
+          }
         }
       }
     }
@@ -76,19 +80,20 @@ class WhitepaperForm extends FormBase
      */
     foreach ($result as $key => $group) {
       // If it is not the general group, add it.
-      if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id'))
+      if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id')) {
         $options[$group->id()] = $group->label();
+      }
     }
     $form['preferences'] = [
       '#type' => 'checkboxes',
       '#options' => $options,
       '#multiple' => TRUE,
       '#default_value' => $default_preferences,
-      '#title' => $this->t('Preferences')
+      '#title' => $this->t('Preferences'),
     ];
     $form['destination'] = [
       '#type' => 'hidden',
-      '#default_value' => ''
+      '#default_value' => '',
     ];
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
@@ -100,7 +105,7 @@ class WhitepaperForm extends FormBase
       $form['actions']['submit']['#states'] = [
         'disabled' => [
           ':input[name="data_privacy"]' => [
-            'checked' => false,
+            'checked' => FALSE,
           ],
         ],
       ];
@@ -112,7 +117,7 @@ class WhitepaperForm extends FormBase
   /**
    * {@inheritDoc}
    */
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
     $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
     $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
@@ -124,14 +129,14 @@ class WhitepaperForm extends FormBase
         ->execute();
       // If the user exists, send him an email to login.
       if (count($result) > 0) {
-        $user = \Drupal\user\Entity\User::load(reset($result));
+        $user = User::load(reset($result));
 
-        if ($form_state->getValue('destination') != "")  {
+        if ($form_state->getValue('destination') != "") {
           $destination = $form_state->getValue('destination');
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
+          // $destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
         }
         $renderable = [
           '#theme' => 'whitepaper_template',
@@ -141,7 +146,7 @@ class WhitepaperForm extends FormBase
         ];
         UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
       }
-      // If the user does not exist
+      // If the user does not exist.
       else {
         if ($form_state->getValue('name') != NULL) {
           $name = $form_state->getValue('name');
@@ -157,12 +162,12 @@ class WhitepaperForm extends FormBase
         if ($form_state->getValue('preferences') != NULL) {
           $user_data['field_iq_group_preferences'] = $form_state->getValue('preferences');
         }
-        if ($form_state->getValue('destination') != "")  {
+        if ($form_state->getValue('destination') != "") {
           $destination = $form_state->getValue('destination');
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
+          // $destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
         }
         $renderable = [
           '#theme' => 'whitepaper_template',
@@ -180,8 +185,9 @@ class WhitepaperForm extends FormBase
         $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
       }
       $user->save();
-      // redirect if needed.
+      // Redirect if needed.
     }
 
   }
+
 }
