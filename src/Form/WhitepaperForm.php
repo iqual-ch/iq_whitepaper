@@ -5,12 +5,11 @@ namespace Drupal\iq_whitepaper\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\group\Entity\Group;
-use Drupal\iq_group\Controller\UserController;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
- *
+ * Whitepaper Form.
  */
 class WhitepaperForm extends FormBase {
 
@@ -145,7 +144,7 @@ class WhitepaperForm extends FormBase {
           '#EMAIL_PREVIEW_TEXT' => $this->t("Download your @project_name whitepaper now", ['@project_name' => $project_name]),
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
-        UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
+        \Drupal::service('iq_group.user_manager')->createMember(['id' => $user->id()], $renderable, $destination, FALSE);
       }
       // If the user does not exist.
       else {
@@ -176,7 +175,7 @@ class WhitepaperForm extends FormBase {
           '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
-        UserController::createMember($user_data, $renderable, $destination);
+        \Drupal::service('iq_group.user_manager')->createMember($user_data, $renderable, $destination);
       }
       \Drupal::messenger()->addMessage($this->t('Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper.'));
     }
