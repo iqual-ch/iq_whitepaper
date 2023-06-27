@@ -255,9 +255,8 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
       unset($view->result);
     }
     else {
-      $node = $view->result[0]->_entity;
-
-      if (!empty($node)) {
+      if (!empty($view->result[0]) && is_object($view->result[0]) && !empty($view->result[0]->_entity)) {
+        $node = $view->result[0]->_entity;  
         $plugin_id = 'group_node:' . $node->bundle();
 
         // Load all of the group content for this node.
