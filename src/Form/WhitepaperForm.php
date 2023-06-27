@@ -50,7 +50,7 @@ class WhitepaperForm extends FormBase {
           'spellcheck' => 'false',
         ],
       ];
-      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "https://www.sqs.ch/de/datenschutzbestimmungen";
+      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "";
       $form['data_privacy'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
@@ -61,7 +61,7 @@ class WhitepaperForm extends FormBase {
     }
     else {
       if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
-        $user = User::load($account->id());
+        $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
         $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
         foreach ($selected_preferences as $key => $value) {
           // If it is not the general group, add it.
@@ -129,7 +129,7 @@ class WhitepaperForm extends FormBase {
         ->execute();
       // If the user exists, send him an email to login.
       if ((is_countable($result) ? count($result) : 0) > 0) {
-        $user = User::load(reset($result));
+        $user = \Drupal::entityTypeManager()->getStorage('user')->load(reset($result));
 
         if ($form_state->getValue('destination') != "") {
           $destination = $form_state->getValue('destination');
