@@ -5,12 +5,11 @@ namespace Drupal\iq_whitepaper\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\group\Entity\Group;
-use Drupal\iq_group\Controller\UserController;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
- *
+ * Whitepaper Form.
  */
 class WhitepaperForm extends FormBase {
 
@@ -51,7 +50,7 @@ class WhitepaperForm extends FormBase {
           'spellcheck' => 'false',
         ],
       ];
-      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";
+      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "";
       $form['data_privacy'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
@@ -62,7 +61,7 @@ class WhitepaperForm extends FormBase {
     }
     else {
       if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
-        $user = User::load($account->id());
+        $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
         $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
         foreach ($selected_preferences as $key => $value) {
           // If it is not the general group, add it.
@@ -118,6 +117,7 @@ class WhitepaperForm extends FormBase {
    * {@inheritDoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $destination = NULL;
     $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
     $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
     $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
@@ -128,8 +128,8 @@ class WhitepaperForm extends FormBase {
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
         ->execute();
       // If the user exists, send him an email to login.
-      if (count($result) > 0) {
-        $user = User::load(reset($result));
+      if ((is_countable($result) ? count($result) : 0) > 0) {
+        $user = \Drupal::entityTypeManager()->getStorage('user')->load(reset($result));
 
         if ($form_state->getValue('destination') != "") {
           $destination = $form_state->getValue('destination');
@@ -144,7 +144,7 @@ class WhitepaperForm extends FormBase {
           '#EMAIL_PREVIEW_TEXT' => $this->t("Download your @project_name whitepaper now", ['@project_name' => $project_name]),
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
-        UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
+        \Drupal::service('iq_group.user_manager')->createMember(['id' => $user->id()], $renderable, $destination, FALSE);
       }
       // If the user does not exist.
       else {
@@ -175,7 +175,7 @@ class WhitepaperForm extends FormBase {
           '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
-        UserController::createMember($user_data, $renderable, $destination);
+        \Drupal::service('iq_group.user_manager')->createMember($user_data, $renderable, $destination);
       }
       \Drupal::messenger()->addMessage($this->t('Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper.'));
     }

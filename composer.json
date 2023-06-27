@@ -9,6 +9,6 @@
     }
   ],
   "require": {
-    "iqual/iq_group": "*"
+    "iqual/iq_group": "^3.0"
   }
 }

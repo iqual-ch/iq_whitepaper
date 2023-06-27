@@ -2,8 +2,8 @@
 
 namespace Drupal\iq_whitepaper\Plugin\Block;
 
+use Drupal\iq_whitepaper\Form\WhitepaperForm;
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Provides a 'Whitepaper' Block.
@@ -20,6 +20,7 @@ class WhitepaperBlock extends BlockBase {
    * {@inheritdoc}
    */
   public function build() {
-    return \Drupal::formBuilder()->getForm('Drupal\iq_whitepaper\Form\WhitepaperForm');
+    return \Drupal::formBuilder()->getForm(WhitepaperForm::class);
   }
+
 }
