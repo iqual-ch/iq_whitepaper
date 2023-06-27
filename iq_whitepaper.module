@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * @file
+ */
+
+use Drupal\iq_whitepaper\IqWhitepaperEvents;
+use Drupal\iq_whitepaper\Event\IqWhitepaperEvent;
+use Drupal\views\ViewExecutable;
+use Drupal\iq_whitepaper\Form\WhitepaperForm;
+use Drupal\user\Entity\User;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Url;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -23,16 +35,16 @@ function iq_whitepaper_file_download($uri) {
       'field_iq_group_whitepaper_file' => $file->id(),
     ]);
     $whitepaper = reset($whitepaper);
-    if (!empty($whitepaper) && $whitepaper->id() > 0)
-    {
+    if (!empty($whitepaper) && $whitepaper->id() > 0) {
       $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
       $existing_downloads = $user->get('field_iq_group_downloads')
         ->getValue();
       $downloads = [];
       if (!empty($existing_downloads)) {
         foreach ($existing_downloads as $key => $val) {
-          if ($val['target_id'] != $whitepaper->id())
+          if ($val['target_id'] != $whitepaper->id()) {
             $downloads[] = $val['target_id'];
+          }
         }
       }
 
@@ -42,7 +54,7 @@ function iq_whitepaper_file_download($uri) {
       // User branches.
       $selected_branches = $user->get('field_iq_group_branches')->getValue();
       foreach ($selected_branches as $key => $value) {
-          $default_branches = array_merge($default_branches, [$value['target_id']]);
+        $default_branches = array_merge($default_branches, [$value['target_id']]);
       }
       // Whitepaper branches.
       $whitepaper_branches = $whitepaper->get('field_iq_group_branches')->getValue();
@@ -70,7 +82,7 @@ function iq_whitepaper_file_download($uri) {
       $user->set('field_iq_group_downloads', $downloads);
       $user->save();
       $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(\Drupal\iq_whitepaper\IqWhitepaperEvents::USER_DOWNLOAD_WHITEPAPER, new \Drupal\iq_whitepaper\Event\IqWhitepaperEvent($user));
+      $eventDispatcher->dispatch(IqWhitepaperEvents::USER_DOWNLOAD_WHITEPAPER, new IqWhitepaperEvent($user));
     }
   }
 }
@@ -78,6 +90,7 @@ function iq_whitepaper_file_download($uri) {
 /**
  * Feature to create the group content on a node create/edit.
  */
+
 /**
  * Get content types and field to act.
  */
@@ -85,7 +98,7 @@ function _node_field_group_settings() {
   $ctypes = [
     'iq_group_whitepaper',
   ];
-  $add = $edit = array();
+  $add = $edit = [];
   foreach ($ctypes as $ctype) {
     $add[] = 'node_' . $ctype . '_form';
     $edit[] = 'node_' . $ctype . '_edit_form';
@@ -100,7 +113,7 @@ function _node_field_group_settings() {
 /**
  * Implements hook_form_alter().
  */
-function iq_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_whitepaper_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $settings = _node_field_group_settings();
   // Add node.
   if (in_array($form_id, $settings['form_id_add'])) {
@@ -111,7 +124,7 @@ function iq_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $
     }
   }
 
-  // you need for the edit form a different callback because maybe you have to delete or create GroupContent
+  // You need for the edit form a different callback because maybe you have to delete or create GroupContent.
   if (in_array($form_id, $settings['form_id_edit'])) {
     foreach (array_keys($form['actions']) as $action) {
       if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
@@ -121,7 +134,9 @@ function iq_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $
   }
 }
 
-
+/**
+ *
+ */
 function _node_field_group_add_custom_callback_group($form, FormStateInterface $form_state) {
   $settings = _node_field_group_settings();
   $nid = $form_state->getValue('nid');
@@ -129,14 +144,14 @@ function _node_field_group_add_custom_callback_group($form, FormStateInterface $
   $gids = $form_state->getValue($settings['group_field']);
 
   foreach ($gids as $gid) {
-    // Skip -none- option
+    // Skip -none- option.
     if ($gid['target_id'] == '_none') {
       continue;
     }
     $group = Group::load($gid['target_id']);
     if ($group != NULL) {
       /** @var \Drupal\group\Plugin\GroupContentEnablerInterface $plugin */
-      $plugin = $group->getGroupType()->getContentPlugin('group_node:'.$node->bundle());
+      $plugin = $group->getGroupType()->getContentPlugin('group_node:' . $node->bundle());
       $group_content = GroupContent::create([
         'type' => $plugin->getContentTypeConfigId(),
         'gid' => $group->id(),
@@ -148,7 +163,9 @@ function _node_field_group_add_custom_callback_group($form, FormStateInterface $
 
 }
 
-// This function is a bit more complex because you have to do some mathematical set operations
+/**
+ * This function is a bit more complex because you have to do some mathematical set operations.
+ */
 function _node_field_group_edit_custom_callback_group($form, FormStateInterface $form_state) {
   $settings = _node_field_group_settings();
   $nid = $form_state->getValue('nid');
@@ -161,44 +178,44 @@ function _node_field_group_edit_custom_callback_group($form, FormStateInterface 
     $gids_wanted[$gid['target_id']] = $gid['target_id'];
   }
 
-  // Index-Array for existing groups for this node gid => gid
+  // Index-Array for existing groups for this node gid => gid.
   $gids_existing = [];
 
-  // Index-Array for gnodes for easier deletion gid => GroupContent
+  // Index-Array for gnodes for easier deletion gid => GroupContent.
   $gnodes_existing = [];
 
   /** @var \Drupal\group\Entity\Storage\GroupContentStorageInterface $storage */
   $storage = \Drupal::entityTypeManager()->getStorage('group_content');
-  // Loads all groups with a relation to the node
+  // Loads all groups with a relation to the node.
   $activGroupListEntity = $storage->loadByEntity($node);
   foreach ($activGroupListEntity as $groupContent) {
-    // fill Index-Array with existing groups gid => gid
+    // Fill Index-Array with existing groups gid => gid.
     $gids_existing[$groupContent->getGroup()->id()] = $groupContent->getGroup()->id();
 
-    // fill Index-Array for existing gnodes
+    // Fill Index-Array for existing gnodes.
     $gnodes_existing[$groupContent->getGroup()->id()] = $groupContent;
   }
 
-  // Union for existing and wanted groups
+  // Union for existing and wanted groups.
   $gids_union = $gids_existing + $gids_wanted;
 
   // Index-Array gnodes to create
-  // = (Union for existing and wanted) minus existing
+  // = (Union for existing and wanted) minus existing.
   $gids_create = array_diff($gids_union, $gids_existing);
 
   // Index-Array gnodes to delete
-  // = (Union for existing and wanted) minus wanted
+  // = (Union for existing and wanted) minus wanted.
   $gids_delete = array_diff($gids_union, $gids_wanted);
 
   foreach ($gids_create as $gid) {
-    // Skip -none- option
+    // Skip -none- option.
     if ($gid == '_none') {
       continue;
     }
     $group = Group::load($gid);
     if ($group != NULL) {
       /** @var \Drupal\group\Plugin\GroupContentEnablerInterface $plugin */
-      $plugin = $group->getGroupType()->getContentPlugin('group_node:'.$node->bundle());
+      $plugin = $group->getGroupType()->getContentPlugin('group_node:' . $node->bundle());
       $group_content = GroupContent::create([
         'type' => $plugin->getContentTypeConfigId(),
         'gid' => $group->id(),
@@ -209,7 +226,7 @@ function _node_field_group_edit_custom_callback_group($form, FormStateInterface 
   }
 
   foreach ($gids_delete as $gid) {
-    // Skip -none- option
+    // Skip -none- option.
     if ($gid == '_none') {
       continue;
     }
@@ -221,9 +238,9 @@ function _node_field_group_edit_custom_callback_group($form, FormStateInterface 
 /**
  * Implements hook_views_pre_render().
  */
-function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
+function iq_whitepaper_views_pre_render(ViewExecutable $view) {
   if ($view->id() == 'whitepaper_block') {
-    $whitepaperForm = \Drupal::formBuilder()->getForm('Drupal\iq_whitepaper\Form\WhitepaperForm');
+    $whitepaperForm = \Drupal::formBuilder()->getForm(WhitepaperForm::class);
     // If there is a resource selected (currently whitepaper, later it may vary).
     if (\Drupal::currentUser()->isAnonymous()) {
       if ($view->filter['nid']->value['value'] != NULL) {
@@ -234,7 +251,7 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
         }
         $whitepaperForm['destination']['#value'] = '/node/' . $nid;
         $destination = '/node/' . $nid;
-        \Drupal::logger('iq_group')->notice(json_encode($view->filter['nid']->value['value']));
+        \Drupal::logger('iq_group')->notice(json_encode($view->filter['nid']->value['value'], JSON_THROW_ON_ERROR));
       }
 
       if (!isset($destination)) {
@@ -243,12 +260,12 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
       $whitepaperForm['register_link'] = [
         '#type' => 'markup',
         '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Create an account') . '</a> / ',
-        '#weight' => 100
+        '#weight' => 100,
       ];
       $whitepaperForm['login_link'] = [
         '#type' => 'markup',
         '#markup' => '<a href="/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
-        '#weight' => 100
+        '#weight' => 100,
       ];
       $view->attachment_after = $whitepaperForm;
       // If the user is anonymous, he should not be able to look at the whitepapers.
@@ -256,14 +273,13 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
     }
     else {
       if (!empty($view->result[0]) && is_object($view->result[0]) && !empty($view->result[0]->_entity)) {
-        $node = $view->result[0]->_entity;  
+        $node = $view->result[0]->_entity;
         $plugin_id = 'group_node:' . $node->bundle();
 
         // Load all of the group content for this node.
         $group_contents = \Drupal::entityTypeManager()
           ->getStorage('group_content')
           ->loadByEntity($node);
-
 
         /** @var \Drupal\group\Entity\GroupInterface[] $groups */
         $groups = [];
@@ -272,7 +288,7 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
           $group = $group_content->getGroup();
           $groups[$group->id()] = $group;
         }
-        $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+        $account = User::load(\Drupal::currentUser()->id());
         $accessible = FALSE;
         foreach ($groups as $group) {
           if ($node->isPublished()) {
@@ -295,8 +311,8 @@ function iq_whitepaper_views_pre_render(\Drupal\views\ViewExecutable $view) {
 /**
  * Implements hook_ENTITY_TYPE_view().
  */
-function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode)
-{
+function iq_whitepaper_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  $file_path = NULL;
   if ($entity->getType() == 'iq_group_whitepaper' && $view_mode == 'full') {
     $build['#cache']['max-age'] = 0;
     $tempStore = \Drupal::service('tempstore.shared')->get('iq_whitepaper.file_download');
@@ -305,18 +321,20 @@ function iq_whitepaper_node_view(array &$build, \Drupal\Core\Entity\EntityInterf
     if (!empty($file)) {
 
       $drupal_file_uri = $file->getFileUri();
-      $file_path = file_url_transform_relative(file_create_url($drupal_file_uri));
+      $file_path = \Drupal::service('file_url_generator')->generateString($drupal_file_uri);
     }
     $tempStore->set(\Drupal::currentUser()->id() . '_whitepaper_file_path', $file_path);
-    \Drupal\Core\Cache\Cache::invalidateTags(['node:' . $entity->id()]);
+    Cache::invalidateTags(['node:' . $entity->id()]);
 
-    $response = new RedirectResponse(\Drupal\Core\Url::fromRoute('<front>')
+    $response = new RedirectResponse(Url::fromRoute('<front>')
       ->toString());
     $middleware->setRedirectResponse($response);
   }
 }
 
-
+/**
+ *
+ */
 function iq_whitepaper_theme($existing, $type, $theme, $path) {
   $text = '';
   return [
@@ -325,7 +343,7 @@ function iq_whitepaper_theme($existing, $type, $theme, $path) {
         'EMAIL_TITLE' => "Whitepaper",
         'EMAIL_PREVIEW_TEXT' => 'Whitepaper download',
         'EMAIL_URL' => $text,
-        'EMAIL_PROJECT_NAME' => 'Project name'
+        'EMAIL_PROJECT_NAME' => 'Project name',
       ],
     ],
   ];
@@ -334,7 +352,7 @@ function iq_whitepaper_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_entity_view_alter().
  */
-function iq_whitepaper_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+function iq_whitepaper_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
 
   if ($entity->bundle() == 'iq_group_whitepaper') {
     $build['edit_profile'] = [
@@ -347,15 +365,14 @@ function iq_whitepaper_entity_view_alter(array &$build, Drupal\Core\Entity\Entit
     $user_edit = \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\UserEditForm');
     unset($user_edit['full_profile_edit']);
     $build['user_wrapper'] = [
-      '#type' => 'fieldset',
-      '#title' => t('User settings'),
-      '#prefix' => '<br/><br/>',
+    '#type' => 'fieldset',
+    '#title' => t('User settings'),
+    '#prefix' => '<br/><br/>',
     ];
     $build['user_wrapper']['user_block'] = $user_edit;
     $build['user_wrapper']['#weight'] = 150000;*/
   }
 }
-
 
 /**
  * Implements hook_file_access().
@@ -385,9 +402,9 @@ function iq_whitepaper_file_access(FileInterface $file, $operation, AccountInter
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
-  // show him the link to the resource
+  // Show him the link to the resource.
   $result = \Drupal::entityTypeManager()
     ->getStorage('group')
     ->loadMultiple();
@@ -397,8 +414,9 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\F
    * @var  \Drupal\group\Entity\Group $group
    */
   foreach ($result as $key => $group) {
-    if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id'))
+    if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id')) {
       $options[$group->id()] = $group->label();
+    }
   }
 
   if ($user->hasField('field_iq_group_preferences') && !isset($form['preferences'])) {
@@ -406,11 +424,12 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\F
       ->getValue();
     $default_value = [];
     foreach ($selected_preferences as $key => $value) {
-      if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
+      if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
         $default_value = array_merge($default_value, [$value['target_id']]);
+      }
     }
 
-    /** @var Node $node */
+    /** @var \Drupal\node\Entity\Node $node */
     $node = \Drupal::routeMatch()->getParameter('node');
     if (!empty($node) && $node->bundle() == 'iq_group_whitepaper') {
       $form['preferences'] = [
@@ -426,7 +445,7 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\F
 
   if ($user->hasField('field_iq_group_branches') && !isset($form['branches'])) {
     $vid = 'branches';
-    $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+    $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
     $term_options = [];
     foreach ($terms as $term) {
       $term_options[$term->tid] = $term->name;
@@ -435,7 +454,7 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\F
       ->getValue();
     $default_branches = [];
     foreach ($selected_branches as $key => $value) {
-        $default_branches = array_merge($default_branches, [$value['target_id']]);
+      $default_branches = array_merge($default_branches, [$value['target_id']]);
     }
     if (!empty($node) && $node->bundle() == 'iq_group_whitepaper') {
       $form['branches'] = [
@@ -453,8 +472,7 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, \Drupal\Core\F
 /**
  * Implements hook_page_attachments().
  */
-function iq_whitepaper_page_attachments(array &$attachments)
-{
+function iq_whitepaper_page_attachments(array &$attachments) {
   $user = \Drupal::currentUser();
   if (!$user->isAnonymous()) {
     $tempStore = \Drupal::service('tempstore.shared')->get('iq_whitepaper.file_download');
@@ -464,7 +482,7 @@ function iq_whitepaper_page_attachments(array &$attachments)
       \Drupal::messenger()->deleteAll();
       \Drupal::messenger()->addMessage(t('Your whitepaper will be now downloaded. You can find it in your Downloads folder.'));
       $whitepaper_file_path = $tempStore->get($user->id() . '_whitepaper_file_path');
-      \Drupal::messenger()->addMessage(t('If the download did not start automatically, click <a href="@link">here</a>.', ['@link' =>  $whitepaper_file_path]));
+      \Drupal::messenger()->addMessage(t('If the download did not start automatically, click <a href="@link">here</a>.', ['@link' => $whitepaper_file_path]));
       $attachments['#attached']['library'][] = 'iq_whitepaper/file_download';
       $attachments['#attached']['drupalSettings']['whitepaper_file_path'] = $whitepaper_file_path;
       $tempStore->delete($user->id() . '_whitepaper_file_path');

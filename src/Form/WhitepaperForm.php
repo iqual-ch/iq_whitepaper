@@ -51,7 +51,7 @@ class WhitepaperForm extends FormBase {
           'spellcheck' => 'false',
         ],
       ];
-      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";
+      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "https://www.sqs.ch/de/datenschutzbestimmungen";
       $form['data_privacy'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
@@ -118,6 +118,7 @@ class WhitepaperForm extends FormBase {
    * {@inheritDoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $destination = NULL;
     $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
     $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
     $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
@@ -128,7 +129,7 @@ class WhitepaperForm extends FormBase {
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
         ->execute();
       // If the user exists, send him an email to login.
-      if (count($result) > 0) {
+      if ((is_countable($result) ? count($result) : 0) > 0) {
         $user = User::load(reset($result));
 
         if ($form_state->getValue('destination') != "") {
