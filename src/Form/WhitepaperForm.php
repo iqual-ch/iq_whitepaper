@@ -2,8 +2,8 @@
 
 namespace Drupal\iq_whitepaper\Form;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\group\Entity\Group;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
@@ -66,7 +66,7 @@ class WhitepaperForm extends FormBase {
         foreach ($selected_preferences as $key => $value) {
           // If it is not the general group, add it.
           if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
-            $default_preferences = array_merge($default_preferences, [$value['target_id']]);
+            $default_preferences = [...$default_preferences, $value['target_id']];
           }
         }
       }

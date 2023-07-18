@@ -4,22 +4,22 @@
  * @file
  */
 
-use Drupal\iq_whitepaper\IqWhitepaperEvents;
-use Drupal\iq_whitepaper\Event\IqWhitepaperEvent;
-use Drupal\views\ViewExecutable;
-use Drupal\iq_whitepaper\Form\WhitepaperForm;
-use Drupal\user\Entity\User;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\Core\Cache\Cache;
-use Drupal\Core\Url;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\file\FileInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
+use Drupal\iq_whitepaper\Event\IqWhitepaperEvent;
+use Drupal\iq_whitepaper\Form\WhitepaperForm;
+use Drupal\iq_whitepaper\IqWhitepaperEvents;
 use Drupal\node\Entity\Node;
+use Drupal\user\Entity\User;
+use Drupal\views\ViewExecutable;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -54,12 +54,12 @@ function iq_whitepaper_file_download($uri) {
       // User branches.
       $selected_branches = $user->get('field_iq_group_branches')->getValue();
       foreach ($selected_branches as $key => $value) {
-        $default_branches = array_merge($default_branches, [$value['target_id']]);
+        $default_branches = [...$default_branches, $value['target_id']];
       }
       // Whitepaper branches.
       $whitepaper_branches = $whitepaper->get('field_iq_group_branches')->getValue();
       foreach ($whitepaper_branches as $key => $value) {
-        $default_branches = array_merge($default_branches, [$value['target_id']]);
+        $default_branches = [...$default_branches, $value['target_id']];
       }
 
       $user->set('field_iq_group_branches', $default_branches);
@@ -68,13 +68,13 @@ function iq_whitepaper_file_download($uri) {
       $default_products = [];
       $selected_products = $user->get('field_iq_group_products')->getValue();
       foreach ($selected_products as $key => $value) {
-        $default_products = array_merge($default_products, [$value['target_id']]);
+        $default_products = [...$default_products, $value['target_id']];
       }
 
       // Whitepaper products.
       $whitepaper_products = $whitepaper->get('field_iq_group_products')->getValue();
       foreach ($whitepaper_products as $key => $value) {
-        $default_products = array_merge($default_products, [$value['target_id']]);
+        $default_products = [...$default_products, $value['target_id']];
       }
       $user->set('field_iq_group_products', $default_products);
 
@@ -82,7 +82,7 @@ function iq_whitepaper_file_download($uri) {
       $user->set('field_iq_group_downloads', $downloads);
       $user->save();
       $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(IqWhitepaperEvents::USER_DOWNLOAD_WHITEPAPER, new IqWhitepaperEvent($user));
+      $eventDispatcher->dispatch(new IqWhitepaperEvent($user), IqWhitepaperEvents::USER_DOWNLOAD_WHITEPAPER);
     }
   }
 }
@@ -425,7 +425,7 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, FormStateInter
     $default_value = [];
     foreach ($selected_preferences as $key => $value) {
       if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
-        $default_value = array_merge($default_value, [$value['target_id']]);
+        $default_value = [...$default_value, $value['target_id']];
       }
     }
 
@@ -454,7 +454,7 @@ function iq_whitepaper_form_iq_group_user_edit_form_alter(&$form, FormStateInter
       ->getValue();
     $default_branches = [];
     foreach ($selected_branches as $key => $value) {
-      $default_branches = array_merge($default_branches, [$value['target_id']]);
+      $default_branches = [...$default_branches, $value['target_id']];
     }
     if (!empty($node) && $node->bundle() == 'iq_group_whitepaper') {
       $form['branches'] = [
