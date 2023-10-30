@@ -63,7 +63,7 @@ class WhitepaperForm extends FormBase {
       if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
         $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
         $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
-        foreach ($selected_preferences as $key => $value) {
+        foreach ($selected_preferences as $value) {
           // If it is not the general group, add it.
           if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
             $default_preferences = [...$default_preferences, $value['target_id']];
@@ -77,7 +77,7 @@ class WhitepaperForm extends FormBase {
      * @var  int $key
      * @var  \Drupal\group\Entity\Group $group
      */
-    foreach ($result as $key => $group) {
+    foreach ($result as $group) {
       // If it is not the general group, add it.
       if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id')) {
         $options[$group->id()] = $group->label();
@@ -127,7 +127,7 @@ class WhitepaperForm extends FormBase {
       $result = \Drupal::entityQuery('user')
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
         ->execute();
-      // If the user exists, send him an email to login.
+      // If the user exists, send an email to login.
       if ((is_countable($result) ? count($result) : 0) > 0) {
         $user = \Drupal::entityTypeManager()->getStorage('user')->load(reset($result));
 

@@ -3,7 +3,7 @@
 namespace Drupal\iq_whitepaper;
 
 /**
- *
+ * The Iq Whitepaper Events class.
  */
 final class IqWhitepaperEvents {
 
