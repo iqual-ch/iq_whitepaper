@@ -26,8 +26,9 @@ class WhitepaperForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $account = \Drupal::currentUser();
     $default_preferences = [];
-    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-    if ($group) {
+    $group_id = \Drupal::config('iq_group.settings')->get('general_group_id');
+    if ($group_id) {
+      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
       $groupRoles = array_keys($groupRoles);
