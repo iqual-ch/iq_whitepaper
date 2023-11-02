@@ -27,89 +27,90 @@ class WhitepaperForm extends FormBase {
     $account = \Drupal::currentUser();
     $default_preferences = [];
     $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-    $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
-    $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
-    $groupRoles = array_keys($groupRoles);
-    if ($account->isAnonymous()) {
-      $form['mail'] = [
-        '#type' => 'email',
-        '#title' => $this->t('Email address'),
-        '#required' => !$account->getEmail(),
-        '#default_value' => $account->getEmail(),
-      ];
-      $form['name'] = [
-        '#type' => 'hidden',
-        '#title' => $this->t('Username'),
-        '#maxlength' => UserInterface::USERNAME_MAX_LENGTH,
-        '#description' => $this->t("Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."),
-        '#required' => FALSE,
-        '#attributes' => [
-          'class' => ['username'],
-          'autocorrect' => 'off',
-          'autocapitalize' => 'off',
-          'spellcheck' => 'false',
-        ],
-      ];
-      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "";
-      $form['data_privacy'] = [
-        '#type' => 'checkbox',
-        '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
-        '#default_value' => FALSE,
-        '#weight' => 100,
-        '#required' => TRUE,
-      ];
-    }
-    else {
-      if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
-        $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
-        $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
-        foreach ($selected_preferences as $value) {
-          // If it is not the general group, add it.
-          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
-            $default_preferences = [...$default_preferences, $value['target_id']];
+    if ($group) {
+      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
+      $groupRoles = array_keys($groupRoles);
+      if ($account->isAnonymous()) {
+        $form['mail'] = [
+          '#type' => 'email',
+          '#title' => $this->t('Email address'),
+          '#required' => !$account->getEmail(),
+          '#default_value' => $account->getEmail(),
+        ];
+        $form['name'] = [
+          '#type' => 'hidden',
+          '#title' => $this->t('Username'),
+          '#maxlength' => UserInterface::USERNAME_MAX_LENGTH,
+          '#description' => $this->t("Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."),
+          '#required' => FALSE,
+          '#attributes' => [
+            'class' => ['username'],
+            'autocorrect' => 'off',
+            'autocapitalize' => 'off',
+            'spellcheck' => 'false',
+          ],
+        ];
+        $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "";
+        $form['data_privacy'] = [
+          '#type' => 'checkbox',
+          '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
+          '#default_value' => FALSE,
+          '#weight' => 100,
+          '#required' => TRUE,
+        ];
+      }
+      else {
+        if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
+          $user = \Drupal::entityTypeManager()->getStorage('user')->load($account->id());
+          $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
+          foreach ($selected_preferences as $value) {
+            // If it is not the general group, add it.
+            if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
+              $default_preferences = [...$default_preferences, $value['target_id']];
+            }
           }
         }
       }
-    }
-    $result = \Drupal::entityTypeManager()->getStorage('group')->loadMultiple();
-    $options = [];
-    /**
-     * @var  int $key
-     * @var  \Drupal\group\Entity\Group $group
-     */
-    foreach ($result as $group) {
-      // If it is not the general group, add it.
-      if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id')) {
-        $options[$group->id()] = $group->label();
+      $result = \Drupal::entityTypeManager()->getStorage('group')->loadMultiple();
+      $options = [];
+      /**
+       * @var  int $key
+       * @var  \Drupal\group\Entity\Group $group
+       */
+      foreach ($result as $group) {
+        // If it is not the general group, add it.
+        if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id')) {
+          $options[$group->id()] = $group->label();
+        }
+      }
+      $form['preferences'] = [
+        '#type' => 'checkboxes',
+        '#options' => $options,
+        '#multiple' => TRUE,
+        '#default_value' => $default_preferences,
+        '#title' => $this->t('Preferences'),
+      ];
+      $form['destination'] = [
+        '#type' => 'hidden',
+        '#default_value' => '',
+      ];
+      $form['actions']['#type'] = 'actions';
+      $form['actions']['submit'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Submit'),
+        '#button_type' => 'primary',
+      ];
+      if (isset($form['data_privacy'])) {
+        $form['actions']['submit']['#states'] = [
+          'disabled' => [
+            ':input[name="data_privacy"]' => [
+              'checked' => FALSE,
+            ],
+          ],
+        ];
       }
     }
-    $form['preferences'] = [
-      '#type' => 'checkboxes',
-      '#options' => $options,
-      '#multiple' => TRUE,
-      '#default_value' => $default_preferences,
-      '#title' => $this->t('Preferences'),
-    ];
-    $form['destination'] = [
-      '#type' => 'hidden',
-      '#default_value' => '',
-    ];
-    $form['actions']['#type'] = 'actions';
-    $form['actions']['submit'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Submit'),
-      '#button_type' => 'primary',
-    ];
-    if (isset($form['data_privacy'])) {
-      $form['actions']['submit']['#states'] = [
-        'disabled' => [
-          ':input[name="data_privacy"]' => [
-            'checked' => FALSE,
-          ],
-        ],
-      ];
-    }
-
     return $form;
   }
 
