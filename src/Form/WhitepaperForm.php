@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\group\Entity\Group;
+use Drupal\iq_group\Service\IqGroupUserManager;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -33,8 +34,15 @@ class WhitepaperForm extends FormBase {
    *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $userManager
+   *   The iq group user manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, protected AccountInterface $currentUser, protected EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    protected AccountInterface $currentUser,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected IqGroupUserManager $userManager,
+  ) {
     $this->config = $config_factory->get('iq_group.settings');
   }
 
@@ -45,7 +53,8 @@ class WhitepaperForm extends FormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('current_user'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('iq_group.user_manager')
     );
   }
 
@@ -178,7 +187,7 @@ class WhitepaperForm extends FormBase {
           '#EMAIL_PREVIEW_TEXT' => $this->t("Download your @project_name whitepaper now", ['@project_name' => $project_name]),
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
-        \Drupal::service('iq_group.user_manager')->createMember(['id' => $user->id()], $renderable, $destination, FALSE);
+        $this->userManager->createMember(['id' => $user->id()], $renderable, $destination, FALSE);
       }
       // If the user does not exist.
       else {
@@ -209,7 +218,7 @@ class WhitepaperForm extends FormBase {
           '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
-        \Drupal::service('iq_group.user_manager')->createMember($user_data, $renderable, $destination);
+        $this->userManager->createMember($user_data, $renderable, $destination);
       }
       \Drupal::messenger()->addMessage($this->t('Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper.'));
     }
