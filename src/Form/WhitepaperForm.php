@@ -2,16 +2,45 @@
 
 namespace Drupal\iq_whitepaper\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\group\Entity\Group;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Whitepaper Form.
  */
 class WhitepaperForm extends FormBase {
+
+  /**
+   * A config object for the iq_group settings.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $config;
+
+  /**
+   * Constructs a new WhitepaperForm.
+   *
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   A config factory for retrieving required config objects.
+   */
+  public function __construct(ConfigFactoryInterface $config_factory) {
+    $this->config = $config_factory->get('iq_group.settings');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory')
+    );
+  }
 
   /**
    * {@inheritDoc}
@@ -26,9 +55,9 @@ class WhitepaperForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $account = \Drupal::currentUser();
     $default_preferences = [];
-    $group_id = \Drupal::config('iq_group.settings')->get('general_group_id');
+    $group_id = $this->config->get('general_group_id');
     if ($group_id) {
-      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+      $group = Group::load($this->config->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
       $groupRoles = array_keys($groupRoles);
@@ -52,7 +81,7 @@ class WhitepaperForm extends FormBase {
             'spellcheck' => 'false',
           ],
         ];
-        $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "";
+        $termsAndConditions = $this->config->get('terms_and_conditions') ?: "";
         $form['data_privacy'] = [
           '#type' => 'checkbox',
           '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
@@ -67,7 +96,7 @@ class WhitepaperForm extends FormBase {
           $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
           foreach ($selected_preferences as $value) {
             // If it is not the general group, add it.
-            if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
+            if ($value['target_id'] != $this->config->get('general_group_id')) {
               $default_preferences = [...$default_preferences, $value['target_id']];
             }
           }
@@ -81,7 +110,7 @@ class WhitepaperForm extends FormBase {
        */
       foreach ($result as $group) {
         // If it is not the general group, add it.
-        if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id')) {
+        if ($group->id() != $this->config->get('general_group_id')) {
           $options[$group->id()] = $group->label();
         }
       }
@@ -120,11 +149,7 @@ class WhitepaperForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $destination = NULL;
-    $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
-    $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
-    $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
-    $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
-    $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
+    $project_name = $this->config->get('project_name') != NULL ? $this->config->get('project_name') : "";
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
         ->accessCheck(TRUE)
