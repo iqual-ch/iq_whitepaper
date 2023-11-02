@@ -127,6 +127,7 @@ class WhitepaperForm extends FormBase {
     $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
+        ->accessCheck(TRUE)
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
         ->execute();
       // If the user exists, send an email to login.
