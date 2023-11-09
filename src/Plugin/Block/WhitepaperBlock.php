@@ -2,8 +2,8 @@
 
 namespace Drupal\iq_whitepaper\Plugin\Block;
 
-use Drupal\iq_whitepaper\Form\WhitepaperForm;
 use Drupal\Core\Block\BlockBase;
+use Drupal\iq_whitepaper\Form\WhitepaperForm;
 
 /**
  * Provides a 'Whitepaper' Block.
