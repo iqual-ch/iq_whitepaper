@@ -1,5 +1,4 @@
 file_download:
-  version: VERSION
   js:
     resources/js/file_download.js: {}
   dependencies:
