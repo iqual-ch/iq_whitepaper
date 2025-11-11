@@ -11,6 +11,6 @@
   "require": {
     "php": "^8.1",
     "drupal/core": "^10 || ^11",
-    "iqual/iq_group": "^4.0"
+    "iqual/iq_group": "^4.4"
   }
 }
