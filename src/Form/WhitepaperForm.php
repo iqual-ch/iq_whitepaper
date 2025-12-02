@@ -166,7 +166,7 @@ class WhitepaperForm extends FormBase {
     $destination = NULL;
     $project_name = $this->config->get('project_name') != NULL ? $this->config->get('project_name') : "";
     if ($this->currentUser->isAnonymous()) {
-      $result = \Drupal::entityQuery('user')
+      $result = $this->entityTypeManager->getStorage('user')->getQuery()
         ->accessCheck(TRUE)
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
         ->execute();
@@ -177,10 +177,7 @@ class WhitepaperForm extends FormBase {
         if ($form_state->getValue('destination') != "") {
           $destination = $form_state->getValue('destination');
         }
-        else {
-          // @todo Set a destination if it is a signup form or not?
-          // $destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
-        }
+
         $renderable = [
           '#theme' => 'whitepaper_template',
           '#EMAIL_TITLE' => $this->t('Whitepaper download'),
@@ -208,10 +205,7 @@ class WhitepaperForm extends FormBase {
         if ($form_state->getValue('destination') != "") {
           $destination = $form_state->getValue('destination');
         }
-        else {
-          // @todo Set a destination if it is a signup form or not?
-          // $destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
-        }
+
         $renderable = [
           '#theme' => 'whitepaper_template',
           '#EMAIL_TITLE' => 'Whitepaper Download',
@@ -220,10 +214,10 @@ class WhitepaperForm extends FormBase {
         ];
         $this->userManager->createMember($user_data, $renderable, $destination);
       }
-      \Drupal::messenger()->addMessage($this->t('Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper.'));
+      $this->messenger()->addMessage($this->t('Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper.'));
     }
     else {
-      $user = User::load($this->currentUser->id());
+      $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
       if ($form_state->getValue('preferences') != NULL) {
         $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
       }

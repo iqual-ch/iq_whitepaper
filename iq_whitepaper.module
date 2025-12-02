@@ -95,7 +95,7 @@ function iq_whitepaper_file_download($uri) {
 /**
  * Get content types and field to act.
  */
-function _node_field_group_settings() {
+function iq_whitepaper_node_field_group_settings() {
   $ctypes = [
     'iq_group_whitepaper',
   ];
@@ -115,12 +115,12 @@ function _node_field_group_settings() {
  * Implements hook_form_alter().
  */
 function iq_whitepaper_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  $settings = _node_field_group_settings();
+  $settings = iq_whitepaper_node_field_group_settings();
   // Add node.
   if (in_array($form_id, $settings['form_id_add'])) {
     foreach (array_keys($form['actions']) as $action) {
       if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
-        $form['actions'][$action]['#submit'][] = '_node_field_group_add_custom_callback_group';
+        $form['actions'][$action]['#submit'][] = 'iq_whitepaper_node_field_group_add_custom_callback_group';
       }
     }
   }
@@ -130,7 +130,7 @@ function iq_whitepaper_form_alter(&$form, FormStateInterface $form_state, $form_
   if (in_array($form_id, $settings['form_id_edit'])) {
     foreach (array_keys($form['actions']) as $action) {
       if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
-        $form['actions'][$action]['#submit'][] = '_node_field_group_edit_custom_callback_group';
+        $form['actions'][$action]['#submit'][] = 'iq_whitepaper_node_field_group_edit_custom_callback_group';
       }
     }
   }
@@ -139,8 +139,8 @@ function iq_whitepaper_form_alter(&$form, FormStateInterface $form_state, $form_
 /**
  * Node field group add custom callback.
  */
-function _node_field_group_add_custom_callback_group($form, FormStateInterface $form_state) {
-  $settings = _node_field_group_settings();
+function iq_whitepaper_node_field_group_add_custom_callback_group($form, FormStateInterface $form_state) {
+  $settings = iq_whitepaper_node_field_group_settings();
   $nid = $form_state->getValue('nid');
   $node = Node::load($nid);
   $gids = $form_state->getValue($settings['group_field']);
@@ -171,8 +171,8 @@ function _node_field_group_add_custom_callback_group($form, FormStateInterface $
  * This function is a bit more complex because you have to do some mathematical
  * set operations.
  */
-function _node_field_group_edit_custom_callback_group($form, FormStateInterface $form_state) {
-  $settings = _node_field_group_settings();
+function iq_whitepaper_node_field_group_edit_custom_callback_group($form, FormStateInterface $form_state) {
+  $settings = iq_whitepaper_node_field_group_settings();
   $nid = $form_state->getValue('nid');
   $node = Node::load($nid);
 
@@ -274,7 +274,6 @@ function iq_whitepaper_views_pre_render(ViewExecutable $view) {
         '#weight' => 100,
       ];
       $view->attachment_after = $whitepaperForm;
-      // If the user is anonymous, he should not be able to look at the whitepapers.
       unset($view->result);
     }
     else {
@@ -339,7 +338,7 @@ function iq_whitepaper_node_view(array &$build, EntityInterface $entity, EntityV
 }
 
 /**
- *
+ * Implements hook_theme().
  */
 function iq_whitepaper_theme($existing, $type, $theme, $path) {
   $text = '';
@@ -366,17 +365,6 @@ function iq_whitepaper_entity_view_alter(array &$build, EntityInterface $entity,
       '#markup' => '</br><div class="iqbm-button iqbm-text btn btn-cta"><a href="/user/edit">' . t('Edit profile') . '</a></div>',
       '#weight' => 150000,
     ];
-    // The user edit form, now removed due to adjustment.
-    /*
-    $user_edit = \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\UserEditForm');
-    unset($user_edit['full_profile_edit']);
-    $build['user_wrapper'] = [
-    '#type' => 'fieldset',
-    '#title' => t('User settings'),
-    '#prefix' => '<br/><br/>',
-    ];
-    $build['user_wrapper']['user_block'] = $user_edit;
-    $build['user_wrapper']['#weight'] = 150000;*/
   }
 }
 

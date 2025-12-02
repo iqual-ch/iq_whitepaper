@@ -30,6 +30,7 @@ class IqWhitepaperEvent extends Event {
    * Returns the event data for the user.
    *
    * @return mixed
+   *   The user data.
    */
   public function &getUser() {
     return $this->user;
